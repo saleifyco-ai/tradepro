@@ -1,0 +1,46 @@
+<!DOCTYPE html><html><body>
+<h2>Dashboard</h2>
+<div class="balance">Balance: $0</div>
+<h3 id="price"></h3>
+<input id="amt"><button onclick="trade()">Trade</button>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, getDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig={apiKey:"AIzaSyDWmnDwQr-YX1IG-WmfCYL4AqALil14h3g",authDomain:"tradepro-a2779.firebaseapp.com",projectId:"tradepro-a2779"};
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
+
+onAuthStateChanged(auth, async user=>{
+if(!user){location="auth.html";return;}
+let ref=doc(db,"users",user.uid);
+let snap=await getDoc(ref);
+if(!snap.exists()){await setDoc(ref,{balance:10000});snap=await getDoc(ref);}
+document.querySelector(".balance").innerText="Balance: $"+snap.data().balance;
+});
+
+window.trade=async()=>{
+let user=auth.currentUser;
+let ref=doc(db,"users",user.uid);
+let snap=await getDoc(ref);
+let bal=snap.data().balance;
+bal+=10;
+await updateDoc(ref,{balance:bal});
+location.reload();
+}
+</script>
+
+<script>
+async function load(){
+let r=await fetch("https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT");
+let d=await r.json();
+document.getElementById("price").innerText="BTC $"+d.price;
+}
+setInterval(load,2000);
+load();
+</script>
+
+</body></html>
